@@ -1,0 +1,75 @@
+// Define the stages
+const stages = [
+  "Traditionalist",
+  "Adapting Traditionalist",
+  "Multichannel Communicator",
+  "Digital Embracer"
+];
+
+// Create a container for the lifecycle bar
+const lifecycleBarContainer = document.createElement('div');
+lifecycleBarContainer.id = 'lifecycleBar';
+document.body.appendChild(lifecycleBarContainer);
+
+// Create a container for the dependent table
+const tableContainer = document.createElement('div');
+tableContainer.id = 'dependentTable';
+document.body.appendChild(tableContainer);
+
+// Function to create the lifecycle bar
+function createLifecycleBar(stages) {
+  stages.forEach(stage => {
+    const stageElement = document.createElement('div');
+    stageElement.className = 'stage';
+    stageElement.innerText = stage;
+    stageElement.onclick = () => loadDependentTable(stage);
+    lifecycleBarContainer.appendChild(stageElement);
+  });
+}
+
+// Function to load dependent table based on the selected stage
+function loadDependentTable(stage) {
+  const query = `SELECT Name, Specialty__c, External_Id__c FROM Account WHERE Engagement_Archetype_BU1__c = '${stage}'`;
+  
+  // Execute SOQL query
+  sforce.connection.query(query, {
+    onSuccess: (result) => {
+      displayTable(result.records);
+    },
+    onFailure: (error) => {
+      console.error("Error fetching data: ", error);
+    }
+  });
+}
+
+// Function to display the table with account data
+function displayTable(records) {
+  // Clear previous table
+  tableContainer.innerHTML = '';
+
+  // Create table
+  const table = document.createElement('table');
+  const header = table.createTHead();
+  const headerRow = header.insertRow(0);
+  const columns = ["Name", "Specialty__c", "External_Id__c"];
+  
+  columns.forEach((col, index) => {
+    const cell = headerRow.insertCell(index);
+    cell.innerText = col;
+  });
+  
+  const tbody = table.createTBody();
+  
+  records.forEach(record => {
+    const row = tbody.insertRow();
+    columns.forEach((col, index) => {
+      const cell = row.insertCell(index);
+      cell.innerText = record[col];
+    });
+  });
+
+  tableContainer.appendChild(table);
+}
+
+// Initialize the lifecycle bar
+createLifecycleBar(stages);
